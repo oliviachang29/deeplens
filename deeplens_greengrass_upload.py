@@ -17,6 +17,11 @@ import awscam
 import cv2
 import greengrasssdk
 
+# Set up cloudwatch
+import logging
+customer_logger = logging.getLogger(__name__)
+customer_logger.propagate = True
+
 class LocalDisplay(Thread):
     """ Class for facilitating the local display of inference results
         (as images). The class is designed to run on its own thread. In
@@ -82,12 +87,12 @@ class LocalDisplay(Thread):
 def write_image_to_s3(img):
     session = Session()
     s3 = session.create_client('s3')
-    file_name = 'image.jpg'
+    # File name matches file name in s3-image-processing
+    file_name = 'DeepLens/face.jpg'
     # You can contorl the size and quality of the image
     encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
-    jpg_data = cv2.imencode('.jpg', img, encode_param)
+    _, jpg_data = cv2.imencode('.jpg', img, encode_param)
     response = s3.put_object(ACL='public-read-write', Body=jpg_data.tostring(),Bucket='deeplens-fd-family',Key=file_name)
-
     image_url = 'https://s3.amazonaws.com/deeplens-fd-family/'+file_name
     return image_url
 
@@ -162,7 +167,7 @@ def greengrass_infinite_infer_run():
                     # Store label and probability to send to cloud
                     cloud_output[output_map[obj['label']]] = obj['prob']
                     image_url = write_image_to_s3(frame)
-                    cloud_output[output_map["image url"]] = image_url
+                    customer_logger.info('Face Detected! Image URL: {}'.format(image_url))
                     client.publish(topic=iot_topic, payload=json.dumps(cloud_output))
             # Set the next frame in the local display stream.
             local_display.set_frame_data(frame)
