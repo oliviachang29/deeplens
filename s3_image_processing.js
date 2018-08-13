@@ -9,7 +9,7 @@ exports.handler = (event, context, callback) => {
     console.log("new photo added: ", event);
     
     var params = {
-      CollectionId: 'family', /* required */
+      // CollectionId: 'family', /* required for search faces by image */
       Image: { /* required */
         S3Object: {
           Bucket: 'deeplens-fd-family',
@@ -17,8 +17,8 @@ exports.handler = (event, context, callback) => {
         }
       },
       Attributes: [ "ALL" ], // have to specify ALL to get emotions
-      FaceMatchThreshold: 95,
-      MaxFaces: 5
+      // FaceMatchThreshold: 95,
+      // MaxFaces: 5
     };
     
     var msg;
@@ -28,20 +28,19 @@ exports.handler = (event, context, callback) => {
         console.log(err, err.stack); // an error occurred
         callback(null, 'An error occured.');
       } else {
-        console.log("Response from Rekognition: \n", data);
-        // if (data.FaceMatches.length <= 0) {
-        //   msg = 'No face found.'
+        var emotions = data['FaceDetails'][0]['Emotions']
+        
+        // for (var i = 0; i < emotions.length; i++) {
+        //   var type = emotions[i]['Type']
+        //   var confidence = emotions[i]['Confidence'];
+        //   var formatted_emotion = type.charAt(0).toUpperCase() + type.substring(1).toLowerCase();
+        //   var msg = "emotion: " + formatted_emotion + ", confidence: " + confidence
         //   console.log(msg)
         //   callback(null, msg);
-        // } else {
-        //   for (var i = 0; i < data.FaceMatches.length; i++) {
-        //     var face = data.FaceMatches[i]['Face']['ExternalImageId'];
-        //     var formatted_name = face.charAt(0).toUpperCase() + face.substring(1);
-        //     msg = 'Face found: '+ formatted_name;
-        //     console.log(msg)
-        //     callback(null, msg);
-        //   }
         // }
+
+        console.log(emotions)
+        callback(null, emotions);
       }
     });
 };
