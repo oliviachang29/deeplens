@@ -82,11 +82,11 @@ class LocalDisplay(Thread):
 def write_image_to_s3(img):
     session = Session()
     s3 = session.create_client('s3')
-    file_name = 'DeepLens/image.jpg'
+    file_name = 'image.jpg'
     # You can contorl the size and quality of the image
     encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
-    _, jpg_data = cv2.imencode('.jpg', img, encode_param)
-    response = s3.put_object(ACL='public-read', Body=jpg_data.tostring(),Bucket='deeplens-fd-family',Key=file_name)
+    jpg_data = cv2.imencode('.jpg', img, encode_param)
+    response = s3.put_object(ACL='public-read-write', Body=jpg_data.tostring(),Bucket='deeplens-fd-family',Key=file_name)
 
     image_url = 'https://s3.amazonaws.com/deeplens-fd-family/'+file_name
     return image_url
